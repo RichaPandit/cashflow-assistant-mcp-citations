@@ -54,8 +54,6 @@ class UserAuthMiddleware(Middleware):
 # -----------------
 mcp = FastMCP(
     name="CashflowAgent",
-    json_response=True,
-    stateless_http=True,
 )
 mcp.add_middleware(UserAuthMiddleware())
 
