@@ -11,7 +11,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 ABFS_PATH = os.getenv("ABFS_PATH")
 
 # Azure AI Search
-SEACRH_ENDPOINT = os.getenv("SEARCH_ENDPOINT")
+SEARCH_ENDPOINT = os.getenv("SEARCH_ENDPOINT")
 SEARCH_KEY = os.getenv("SEARCH_KEY")
 
 # Sharepoint

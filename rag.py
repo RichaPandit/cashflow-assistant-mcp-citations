@@ -1,8 +1,8 @@
 import requests
-from config import SEARCH_ENPOINT, SEARCH_KEY
+from config import SEARCH_ENDPOINT, SEARCH_KEY
 
 def search_documents(query, top=2):
-    url = f"{SEARCH_ENPOINT}/indexes/cashflow-index/docs/search?api-version=2023-11-01"
+    url = f"{SEARCH_ENDPOINT}/indexes/cashflow-index/docs/search?api-version=2023-11-01"
     headers = {
         "api-key": SEARCH_KEY,
         "Content-Type": "application/json"
