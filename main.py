@@ -30,14 +30,21 @@ LOCAL_TOKEN: str = os.getenv("MCP_DEV_ASSUME_KEY", os.getenv("LOCAL_TOKEN", ""))
 # -----------------
 class UserAuthMiddleware(Middleware):
     async def on_message(self, context: MiddlewareContext, call_next):
+        # Allow initialization and tool discovery without auth
+        method = getattr(context, 'method', None)
+        if method in ['initialize', 'tools/list', 'resources/list']:
+            logger.info(f"Allowing {method} without authentication")
+            return await call_next(context)
+        
         headers = get_http_headers()
 
         mcp_api_key = headers.get(HEADER_NAME) or headers.get("api-key")
         if not mcp_api_key:
+            logger.warning("No authentication key provided")
             raise ToolError("Access denied: no key provided")
 
         if not mcp_api_key.startswith("Bearer "):
-            logging.info("invalid token format in %s", HEADER_NAME)
+            logger.warning("Invalid token format in %s", HEADER_NAME)
             raise ToolError("Access denied: invalid token format")
 
         token = mcp_api_key.removeprefix("Bearer ").strip()
@@ -45,8 +52,10 @@ class UserAuthMiddleware(Middleware):
         if not expected:
             raise ToolError("Access denied: server not configured")
         if token != expected:
+            logger.warning("Invalid token provided")
             raise ToolError("Access denied: invalid token")
 
+        logger.info("Authentication successful")
         return await call_next(context)
 
 # -----------------
@@ -55,7 +64,8 @@ class UserAuthMiddleware(Middleware):
 mcp = FastMCP(
     name="CashflowAgent",
 )
-mcp.add_middleware(UserAuthMiddleware())
+# Temporarily disable auth for testing tool discovery
+# mcp.add_middleware(UserAuthMiddleware())
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -168,9 +178,6 @@ def res_fabric_cashflow() -> List[float]:
 app = create_streamable_http_app(
     server=mcp,
     streamable_http_path="/mcp",
-    json_response=True,
-    stateless_http=True,
-    debug=False,
 )
 
 if __name__ == "__main__":
