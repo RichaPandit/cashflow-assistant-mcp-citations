@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fabric import query_fabric_cashflow
 from rag import search_documents
 from external_api import get_fx_rate
-from sharepoint import list_pdf_files, download_pdf, extract_text_from_pdf
-from config import SITE_ID
+from rag import search_blob_documents
 
 app = FastAPI()
 
@@ -20,24 +19,9 @@ def cashflow_agent(query: str):
     # 2. FX API
     fx_rate = get_fx_rate()
 
-    # 3. RAG / SharePoint PDFs
-    docs_rag = search_documents(query)
-    pdfs = list_pdf_files(SITE_ID)
-    docs_live = []
-
-    for pdf in pdfs:
-        try:
-            pdf_bytes = download_pdf(SITE_ID, pdf["id"])
-            text = extract_text_from_pdf(pdf_bytes)
-            if query.lower() in text.lower():
-                docs_live.append({
-                    "title": pdf["name"],
-                    "url": pdf["url"],#
-                    "content": text[:500],
-                    "source": "SharePoint (Live PDF)"
-                })
-        except:
-            continue
+    # 3. Azure AI Search (Blob PDFs)
+    docs_rag = search_blob_documents(query)
+    docs_live = docs_rag
 
     # 4. Combine docs and format answer
     docs = docs_rag + docs_live
