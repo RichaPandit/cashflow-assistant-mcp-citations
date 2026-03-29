@@ -8,3 +8,5 @@ PyPDF2
 pandas
 pyodbc
 pyarrow
+adlfs
+azure-identity
