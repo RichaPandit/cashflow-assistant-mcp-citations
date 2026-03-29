@@ -74,6 +74,7 @@ logger = logging.getLogger(__name__)
 # TOOLS
 # -----------------
 
+def get_cashflow_forecast(query: str) -> str:
 @mcp.tool()
 def get_cashflow_forecast(query: str) -> str:
     """
@@ -83,54 +84,65 @@ def get_cashflow_forecast(query: str) -> str:
     Args:
         query: Search query for supporting documents
     """
-    # 1. Fabric via ABFS
-    values = query_fabric_cashflow()
+    logger.info("get_cashflow_forecast called with query: %s", query)
+    try:
+        # 1. Fabric via ABFS
+        logger.info("Querying Fabric Lakehouse via ABFS...")
+        values = query_fabric_cashflow()
+        logger.info("Fabric values: %s", values)
 
-    if values:
-        forecast = sum(values) / len(values)
-    else:
-        forecast = 0
+        if values:
+            forecast = sum(values) / len(values)
+        else:
+            forecast = 0
 
-    # 2. FX API
-    fx_rate = get_fx_rate()
+        # 2. FX API
+        logger.info("Querying FX API...")
+        fx_rate = get_fx_rate()
+        logger.info("FX rate: %s", fx_rate)
 
-    # 3. Azure AI Search (Blob PDFs)
-    docs_rag = search_documents(query)
+        # 3. Azure AI Search (Blob PDFs)
+        logger.info("Querying Azure AI Search for docs...")
+        docs_rag = search_documents(query)
+        logger.info("Docs RAG: %s", docs_rag)
 
-    # 4. Build answer with citations
-    answer = f"Projected cash flow is £{int(forecast)} (~${int(forecast * fx_rate)})."
+        # 4. Build answer with citations
+        answer = f"Projected cash flow is £{int(forecast)} (~${int(forecast * fx_rate)})."
 
-    # 5. Citations
-    citations = [
-        {
-            "title": "Fabric Lakehouse (ABFS)",
-            "url": "https://app.fabric.microsoft.com/",
-            "source": "Fabric"
-        },
-        {
-            "title": "Exchange Rate API",
-            "url": "https://api.exchangerate-api.com",
-            "source": "API"
+        # 5. Citations
+        citations = [
+            {
+                "title": "Fabric Lakehouse (ABFS)",
+                "url": "https://app.fabric.microsoft.com/",
+                "source": "Fabric"
+            },
+            {
+                "title": "Exchange Rate API",
+                "url": "https://api.exchangerate-api.com",
+                "source": "API"
+            }
+        ]
+
+        for d in docs_rag:
+            citations.append({
+                "title": d.get("metadata_storage_name", "Document"),
+                "url": d.get("metadata_storage_path", ""),
+                "source": d.get("source", "Azure AI Search")
+            })
+
+        # 6. Format Output
+        result = {
+            "answer": answer,
+            "forecast_gbp": int(forecast),
+            "forecast_usd": int(forecast * fx_rate),
+            "fx_rate": fx_rate,
+            "citations": citations
         }
-    ]
-
-    for d in docs_rag:
-        citations.append({
-            "title": d.get("metadata_storage_name", "Document"),
-            "url": d.get("metadata_storage_path", ""),
-            "source": d.get("source", "Azure AI Search")
-        })
-
-    # 6. Format Output
-    result = {
-        "answer": answer,
-        "forecast_gbp": int(forecast),
-        "forecast_usd": int(forecast * fx_rate),
-        "fx_rate": fx_rate,
-        "citations": citations
-    }
-
-    return json.dumps(result, ensure_ascii=False)
+        logger.info("Returning result: %s", result)
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        logger.error("Error in get_cashflow_forecast: %s", e, exc_info=True)
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 @mcp.tool()
 def search_documents_tool(query: str, top: int = 3) -> str:
