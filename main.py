@@ -114,6 +114,18 @@ def get_cashflow_forecast(query: str) -> str:
         if breakdown:
             answer += "\n\nBreakdown by month:" + "".join([f"\n- {month}: £{int(val['gbp'])} (~${int(val['usd'])})" for month, val in breakdown.items()])
 
+        # Add clickable PDF/document links if present
+        doc_links = []
+        for d in docs_rag:
+            url = d.get("metadata_storage_path", "")
+            title = d.get("metadata_storage_name", "Document")
+            if url and url.lower().endswith(".pdf"):
+                doc_links.append(f"[{title}]({url})")
+            elif url:
+                doc_links.append(f"{title}: {url}")
+        if doc_links:
+            answer += "\n\nSupporting documents:" + "".join([f"\n- {link}" for link in doc_links])
+
         # 5. Citations
         citations = [
             {
