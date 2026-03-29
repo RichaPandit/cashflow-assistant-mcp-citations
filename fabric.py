@@ -14,8 +14,9 @@ def query_fabric_cashflow():
     try:
         df = pd.read_parquet(ABFS_PATH, storage_options=storage_options)
 
-        if "net_cashflow" in df.columns:
-            raise Exception(f"Column 'net_cashflow' not found. Available: {df.columns}")
+        if "net_cashflow" not in df.columns:
+            print(f"Column 'net_cashflow' not found. Available: {df.columns.tolist()}")
+            return []
         values = df["net_cashflow"].dropna().tail(3).tolist()
         return values
     

@@ -12,6 +12,7 @@ from fastmcp.server import FastMCP
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.http import create_streamable_http_app
+from starlette.middleware.cors import CORSMiddleware
 
 try:
     from fastmcp.server.exceptions import ToolError
@@ -186,9 +187,17 @@ def res_fabric_cashflow() -> List[float]:
 # --------------------------
 # ASGI app & direct run
 # --------------------------
-app = create_streamable_http_app(
+_mcp_app = create_streamable_http_app(
     server=mcp,
     streamable_http_path="/mcp",
+)
+
+# Wrap with CORS so Copilot Studio (cross-origin) can reach the MCP endpoint
+app = CORSMiddleware(
+    app=_mcp_app,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 if __name__ == "__main__":
