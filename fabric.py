@@ -23,9 +23,14 @@ def query_fabric_cashflow():
             logger.error("Column 'net_cashflow' not found. Available: %s", df.columns.tolist())
             return []
 
-        values = df["net_cashflow"].dropna().tail(3).tolist()
-        logger.info("Cashflow values: %s", values)
-        return values
+        if "month" in df.columns:
+            grouped = df.groupby("month")["net_cashflow"].sum().sort_index()
+            logger.info("Monthly cashflow breakdown: %s", grouped.to_dict())
+            return grouped.to_dict()
+        else:
+            values = df["net_cashflow"].dropna().tail(3).tolist()
+            logger.info("Cashflow values: %s", values)
+            return values
 
     except Exception as e:
         logger.error("Error reading Fabric Delta table via ABFS: %s", str(e), exc_info=True)

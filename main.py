@@ -1,7 +1,7 @@
 import os
 import logging
 import json
-from typing import Dict, List, Any
+from typing import List
 
 from fabric import query_fabric_cashflow
 from rag import search_documents
@@ -91,10 +91,13 @@ def get_cashflow_forecast(query: str) -> str:
         values = query_fabric_cashflow()
         logger.info("Fabric values: %s", values)
 
-        if values:
-            forecast = sum(values) / len(values)
+        # If values is a dict, treat as monthly breakdown
+        if isinstance(values, dict):
+            forecast = sum(values.values())
+            breakdown = {k: {"gbp": v, "usd": round(v * get_fx_rate(), 2)} for k, v in values.items()}
         else:
-            forecast = 0
+            breakdown = None
+            forecast = sum(values) / len(values) if values else 0
 
         # 2. FX API
         logger.info("Querying FX API...")
@@ -108,6 +111,8 @@ def get_cashflow_forecast(query: str) -> str:
 
         # 4. Build answer with citations
         answer = f"Projected cash flow is £{int(forecast)} (~${int(forecast * fx_rate)})."
+        if breakdown:
+            answer += "\n\nBreakdown by month:" + "".join([f"\n- {month}: £{int(val['gbp'])} (~${int(val['usd'])})" for month, val in breakdown.items()])
 
         # 5. Citations
         citations = [
@@ -124,9 +129,21 @@ def get_cashflow_forecast(query: str) -> str:
         ]
 
         for d in docs_rag:
+            # Build a clickable link for PDFs if possible
+            url = d.get("metadata_storage_path", "")
+            page = d.get("page")
+            title = d.get("metadata_storage_name", "Document")
+            if url and url.lower().endswith(".pdf"):
+                link = f"[{title}]({url})"
+            else:
+                link = url or title
+            if page:
+                cite_title = f"{link} (page {page})"
+            else:
+                cite_title = link
             citations.append({
-                "title": d.get("metadata_storage_name", "Document"),
-                "url": d.get("metadata_storage_path", ""),
+                "title": cite_title,
+                "url": url,
                 "source": d.get("source", "Azure AI Search")
             })
 
@@ -138,6 +155,8 @@ def get_cashflow_forecast(query: str) -> str:
             "fx_rate": fx_rate,
             "citations": citations
         }
+        if breakdown:
+            result["monthly_breakdown"] = breakdown
         logger.info("Returning result: %s", result)
         return json.dumps(result, ensure_ascii=False)
     except Exception as e:

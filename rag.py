@@ -35,6 +35,7 @@ def search_documents(query, top=3):
                 "metadata_storage_name": r.get("metadata_storage_name") or r.get("title") or r.get("name") or r.get("id", "Document"),
                 "content": r.get("content") or r.get("chunk") or r.get("text", ""),
                 "metadata_storage_path": r.get("metadata_storage_path") or r.get("url") or r.get("source", ""),
+                "page": r.get("page") or r.get("page_number") or r.get("pagenum") or None
             })
         return normalised
     except Exception as e:
