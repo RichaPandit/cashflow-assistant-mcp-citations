@@ -25,6 +25,9 @@ except Exception:
 HEADER_NAME = "x-agent-key"
 LOCAL_TOKEN: str = os.getenv("MCP_DEV_ASSUME_KEY", os.getenv("LOCAL_TOKEN", "")).strip()
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # -----------------
 # Auth middleware
 # -----------------
@@ -67,14 +70,10 @@ mcp = FastMCP(
 # Temporarily disable auth for testing tool discovery
 # mcp.add_middleware(UserAuthMiddleware())
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # -----------------
 # TOOLS
 # -----------------
 
-def get_cashflow_forecast(query: str) -> str:
 @mcp.tool()
 def get_cashflow_forecast(query: str) -> str:
     """
