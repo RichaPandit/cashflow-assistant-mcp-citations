@@ -15,5 +15,5 @@ SEARCH_KEY = os.getenv("SEARCH_KEY")
 
 # External API
 EXCHANGE_API_KEY = os.getenv("EXCHANGE_API_KEY")
-FX_BASE_CURRENCY = os.getenv("FX_BASE_CURRENCY", "USD")
-FX_API_BASE_URL = os.getenv("FX_API_BASE_URL")
+FX_BASE_CURRENCY = os.getenv("FX_BASE_CURRENCY", "GBP")
+FX_API_BASE_URL = os.getenv("FX_API_BASE_URL", "https://v6.exchangerate-api.com/v6")
