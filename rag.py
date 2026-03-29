@@ -16,7 +16,6 @@ def search_documents(query, top=3):
     body = {
         "search": query,
         "top": top,
-        "select": "metadata_storage_name,content,metadata_storage_path"
     }
     logger.info("Searching index at: %s | query: %s", url, query)
     try:
@@ -26,8 +25,18 @@ def search_documents(query, top=3):
             logger.error("Search error response: %s", res.text)
             return []
         data = res.json()
-        logger.info("Search returned %s results", len(data.get('value', [])))
-        return data.get("value", [])
+        results = data.get("value", [])
+        logger.info("Search returned %s results. First result keys: %s",
+                    len(results), list(results[0].keys()) if results else [])
+        # Normalise to expected fields using whatever the index actually has
+        normalised = []
+        for r in results:
+            normalised.append({
+                "metadata_storage_name": r.get("metadata_storage_name") or r.get("title") or r.get("name") or r.get("id", "Document"),
+                "content": r.get("content") or r.get("chunk") or r.get("text", ""),
+                "metadata_storage_path": r.get("metadata_storage_path") or r.get("url") or r.get("source", ""),
+            })
+        return normalised
     except Exception as e:
         logger.error("Search request failed: %s", str(e), exc_info=True)
         return []
