@@ -10,3 +10,4 @@ pyodbc
 pyarrow
 adlfs
 azure-identity
+deltalake
