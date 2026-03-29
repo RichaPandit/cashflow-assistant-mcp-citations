@@ -119,10 +119,10 @@ def get_cashflow_forecast(query: str) -> str:
         for d in docs_rag:
             url = d.get("metadata_storage_path", "")
             title = d.get("metadata_storage_name", "Document")
-            if url and url.lower().endswith(".pdf"):
+            if url:
                 doc_links.append(f"[{title}]({url})")
-            elif url:
-                doc_links.append(f"{title}: {url}")
+            else:
+                doc_links.append(title)
         if doc_links:
             answer += "\n\nSupporting documents:" + "".join([f"\n- {link}" for link in doc_links])
 
