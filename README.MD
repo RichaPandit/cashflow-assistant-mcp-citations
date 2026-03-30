@@ -67,4 +67,4 @@ See project for license details.
 
 ## Contact
 
-For questions or support, please contact the project maintainer.
+For questions or support, please contact the project maintainer (richa.s.pandit@outlook.com).
