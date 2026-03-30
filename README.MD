@@ -7,7 +7,7 @@ Cashflow Agent is an AI-powered service that provides cashflow forecasts, curren
 ## Features
 
 - **Cashflow Forecasting**: Retrieves and summarizes cashflow data from Microsoft Fabric Lakehouse, with optional monthly breakdown and FX conversion.
-- **Document Search**: Searches SharePoint and other documents indexed in Azure AI Search, returning relevant documents and citations.
+- **Document Search**: Searches SharePoint and other documents synces regaulary to Azure Storage Account Container via a LogicApps flow, indexed in Azure AI Search, returning relevant documents and citations.
 - **Exchange Rate Lookup**: Fetches real-time currency exchange rates between GBP and USD (or other currencies).
 - **Resource Exposure**: Exposes Fabric cashflow data as a resource for use in MCP workflows.
 - **Authentication Middleware**: Supports API key-based authentication for secure access (can be disabled for testing).
